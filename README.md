@@ -8,4 +8,5 @@
 
 ### todo
 
+- [ ] ***Queue.Put*** 方法的参数使用 *type interface* 约束参数类型
 - [ ] 优化队列任务执行后 *error* 的处理
