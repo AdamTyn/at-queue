@@ -22,11 +22,10 @@ type Queue struct {
 }
 
 func NewQueue(capacity int, tick time.Duration) *Queue {
-	capacity++
 	return &Queue{
 		fs:   make([]func() error, capacity),
 		stop: make(chan struct{}),
-		max:  capacity,
+		max:  capacity + 1,
 		tick: tick,
 	}
 }
@@ -38,9 +37,7 @@ func (dq *Queue) Run() {
 		select {
 		case <-ticker.C:
 			f := dq.Pop()
-			if err := f(); err != nil {
-				println(err.Error())
-			}
+			go f.Do()
 		case <-dq.stop:
 			close(dq.stop)
 			dq.Lock()
@@ -57,7 +54,7 @@ func (dq *Queue) Close() {
 	}()
 }
 
-func (dq *Queue) Put(f func() error) error {
+func (dq *Queue) Put(f Executor) error {
 	dq.Lock()
 	defer dq.Unlock()
 	if dq.isFull() {
@@ -68,7 +65,7 @@ func (dq *Queue) Put(f func() error) error {
 	return nil
 }
 
-func (dq *Queue) Pop() func() error {
+func (dq *Queue) Pop() Executor {
 	dq.Lock()
 	defer dq.Unlock()
 	if dq.isEmpty() {
